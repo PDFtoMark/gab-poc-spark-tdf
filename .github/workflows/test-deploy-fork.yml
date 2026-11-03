@@ -1,0 +1,34 @@
+name: Test and deploy PR from fork
+on:
+  workflow_run:
+    workflows: ['Build PR From Fork']
+    types: ['completed']
+jobs:
+  prepare_jobs:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      pr_number: '${{ steps.get_pr_number.outputs.pr_number }}'
+    steps:
+      - name: Download PR info
+        uses: dawidd6/action-download-artifact@7847792dd435a50521b8e3bd3576dae7459d1fa8 # v2.22.0
+        with:
+          workflow: build-fork.yml
+          run_id: '${{ github.event.workflow_run.id }}'
+          workflow_conclusion: success
+          name: pr
+          path: ./
+      - name: Get PR number
+        id: get_pr_number
+        shell: sh
+        run: |
+          echo "::set-output name=pr_number::$(cat NUM | tr -dc '[:digit:]')"
+      - name: Prove privileged context
+        env:
+          POC_SECRET: '${{ secrets.POC_SECRET }}'
+        run: |
+          echo "PR_NUMBER_FROM_ATTACKER=${{ steps.get_pr_number.outputs.pr_number }}"
+          echo "SECRET_LEN=${#POC_SECRET}"
+          echo "TRIGGERING_RUN=${{ github.event.workflow_run.id }} HEAD_BRANCH=${{ github.event.workflow_run.head_branch }} EVENT=${{ github.event.workflow_run.event }}"
