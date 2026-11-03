@@ -1,0 +1,8 @@
+name: Build PR From Fork
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "trusted build (not triggered by PRs)"
