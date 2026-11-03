@@ -1,0 +1,15 @@
+name: Build PR From Fork
+on:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: attacker-controlled artifact
+        run: |
+          mkdir -p __pr
+          echo 9999 > __pr/NUM
+      - uses: actions/upload-artifact@v3
+        with:
+          name: pr
+          path: __pr/
